@@ -13,7 +13,8 @@ ARCH="amd64"
 WORKDIR="$PWD/workdir"
 CHROOT="$WORKDIR/chroot"
 mkdir -p "$CHROOT"
-DEPS=(debootstrap squashfs-tools xorriso)
+DEPS=(debootstrap mksquashfs xorriso)
+
 
 for dep in "${DEPS[@]}"; do
   if ! command -v $dep &>/dev/null; then
