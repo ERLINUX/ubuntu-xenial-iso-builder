@@ -31,7 +31,20 @@ echo "2) i3wm"
 echo "3) Openbox"
 read -p "Opção: " WM
 echo "Opção selecionada: $WM"
-echo "Em desenvolvimento..."
+echo "Deseja instalar pacotes adicionais?"
+echo "1) Utilitários básicos (vim, htop, curl)"
+echo "2) Desenvolvimento (build-essential, git)"
+echo "3) Rede (net-tools, openssh-server)"
+echo "4) Nenhum"
+read -p "Opção: " OPT
+
+echo "Deseja instalar pacotes adicionais?"
+echo "1) Utilitários básicos (vim, htop, curl)"
+echo "2) Desenvolvimento (build-essential, git)"
+echo "3) Rede (net-tools, openssh-server)"
+echo "4) Nenhum"
+read -p "Opção: " OPT
+
 
 bootstrap_base() {
   echo "Iniciando debootstrap do Ubuntu $RELEASE..."
@@ -51,13 +64,7 @@ prepare_chroot() {
   mount -t sysfs sys "$CHROOT/sys"
   cp /etc/resolv.conf "$CHROOT/etc/resolv.conf"
   echo "Chroot preparado."
-}
-prepare_chroot() {
-  mount --bind /dev "$CHROOT/dev"
-  mount --bind /dev/pts "$CHROOT/dev/pts"
-  mount -t proc proc "$CHROOT/proc"
-  mount -t sysfs sys "$CHROOT/sys"
-  cp /etc/resolv.conf "$CHROOT/etc/resolv.conf"
+
 }
 enter_chroot() {
   echo "Entrando no chroot..."
@@ -90,7 +97,36 @@ install_desktop() {
     esac
 
     echo "Instalação concluída."
+
 }
+install_optional_packages() {
+    echo "Instalando pacotes opcionais..."
+
+    case "$OPT" in
+        1)
+            echo "Instalando utilitários básicos..."
+            chroot "$CHROOT" /bin/bash -c \
+            "apt install -y vim htop curl"
+            ;;
+        2)
+            echo "Instalando ferramentas de desenvolvimento..."
+            chroot "$CHROOT" /bin/bash -c \
+            "apt install -y build-essential git"
+            ;;
+        3)
+            echo "Instalando pacotes de rede..."
+            chroot "$CHROOT" /bin/bash -c \
+            "apt install -y net-tools openssh-server"
+            ;;
+        4)
+            echo "Nenhum pacote opcional selecionado."
+            ;;
+        *)
+            echo "Opção inválida."
+            ;;
+    esac
+}
+
 # -------------------------
 # Função: enable_repositories
 # -------------------------
@@ -151,3 +187,13 @@ build_iso() {
     echo "ISO base criada (SquashFS pronto)."
     echo "Próximo passo: adicionar bootloader (isolinux/GRUB)."
 }
+main() {
+    bootstrap_base
+    prepare_chroot
+    enable_repositories
+    install_desktop
+    install_optional_packages
+    save_user_choices
+    build_iso
+}
+main
