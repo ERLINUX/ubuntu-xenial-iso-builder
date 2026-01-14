@@ -91,3 +91,63 @@ install_desktop() {
 
     echo "Instalação concluída."
 }
+# -------------------------
+# Função: enable_repositories
+# -------------------------
+enable_repositories() {
+    echo "Habilitando repositórios (universe, multiverse)..."
+
+    chroot "$CHROOT" /bin/bash -c "
+        apt update &&
+        apt install -y software-properties-common &&
+        add-apt-repository universe -y &&
+        add-apt-repository multiverse -y &&
+        apt update
+    "
+
+    echo "Repositórios habilitados."
+}
+
+# -------------------------
+# Função: save_user_choices
+# -------------------------
+save_user_choices() {
+    echo "Salvando escolhas do usuário..."
+
+    CHOICES_FILE="$WORKDIR/user-choices.txt"
+
+    {
+        echo "Ubuntu Xenial ISO Builder"
+        echo "Data: $(date)"
+        echo "Arquitetura: $ARCH"
+        echo "Release: $RELEASE"
+        echo "Ambiente gráfico escolhido: $WM"
+        echo "Pacotes opcionais: $OPT"
+    } > "$CHOICES_FILE"
+
+    # Copia para dentro do chroot
+    cp "$CHOICES_FILE" "$CHROOT/root/user-choices.txt"
+
+    echo "Escolhas salvas em:"
+    echo "- $CHOICES_FILE"
+    echo "- /root/user-choices.txt (dentro do chroot)"
+}
+
+# -------------------------
+# Função: build_iso
+# -------------------------
+build_iso() {
+    echo "Gerando ISO bootável..."
+
+    ISO_DIR="$WORKDIR/iso"
+    mkdir -p "$ISO_DIR/live"
+
+    echo "Limpando cache..."
+    chroot "$CHROOT" /bin/bash -c "apt clean"
+
+    echo "Criando filesystem.squashfs..."
+    mksquashfs "$CHROOT" "$ISO_DIR/live/filesystem.squashfs" -comp xz
+
+    echo "ISO base criada (SquashFS pronto)."
+    echo "Próximo passo: adicionar bootloader (isolinux/GRUB)."
+}
