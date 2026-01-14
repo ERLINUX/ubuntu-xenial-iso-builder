@@ -5,6 +5,14 @@ if [[ $EUID -ne 0 ]]; then
   echo "Execute como root."
   exit 1
 fi
+# =========================
+# Configurações principais
+# =========================
+RELEASE="xenial"
+ARCH="amd64"
+WORKDIR="$PWD/workdir"
+CHROOT="$WORKDIR/chroot"
+mkdir -p "$CHROOT"
 DEPS=(debootstrap squashfs-tools xorriso)
 
 for dep in "${DEPS[@]}"; do
@@ -13,6 +21,10 @@ for dep in "${DEPS[@]}"; do
     exit 1
   fi
 done
+
+# =========================
+# Menu
+# =========================
 echo "Escolha o ambiente gráfico:"
 echo "1) XFCE4"
 echo "2) i3wm"
