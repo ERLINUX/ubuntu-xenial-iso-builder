@@ -32,3 +32,15 @@ echo "3) Openbox"
 read -p "Opção: " WM
 echo "Opção selecionada: $WM"
 echo "Em desenvolvimento..."
+
+bootstrap_base() {
+  echo "Iniciando debootstrap do Ubuntu $RELEASE..."
+
+  debootstrap \
+    --arch="$ARCH" \
+    "$RELEASE" \
+    "$CHROOT" \
+    http://archive.ubuntu.com/ubuntu
+
+  echo "bootstrap_base."
+}
