@@ -64,3 +64,30 @@ enter_chroot() {
   chroot "$CHROOT" /bin/bash
   echo "Saindo do chroot..."
 }
+install_desktop() {
+    echo "Instalando interface gráfica..."
+    
+    # Atualiza apt e garante universe
+    chroot "$CHROOT" /bin/bash -c "apt update && apt install -y software-properties-common"
+    chroot "$CHROOT" /bin/bash -c "add-apt-repository universe -y && apt update"
+    
+    case "$WM" in
+        1)
+            echo "Instalando XFCE4..."
+            chroot "$CHROOT" /bin/bash -c "apt install -y xfce4 lightdm"
+            ;;
+        2)
+            echo "Instalando i3wm..."
+            chroot "$CHROOT" /bin/bash -c "apt install -y i3 xorg lightdm"
+            ;;
+        3)
+            echo "Instalando Openbox..."
+            chroot "$CHROOT" /bin/bash -c "apt install -y openbox obconf xorg lightdm"
+            ;;
+        *)
+            echo "Opção inválida. Nenhuma interface será instalada."
+            ;;
+    esac
+
+    echo "Instalação concluída."
+}
