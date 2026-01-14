@@ -21,7 +21,6 @@ for dep in "${DEPS[@]}"; do
     exit 1
   fi
 done
-
 # =========================
 # Menu
 # =========================
@@ -35,13 +34,34 @@ echo "Em desenvolvimento..."
 
 bootstrap_base() {
   echo "Iniciando debootstrap do Ubuntu $RELEASE..."
-
   debootstrap \
     --arch="$ARCH" \
     "$RELEASE" \
     "$CHROOT" \
     http://archive.ubuntu.com/ubuntu
 
-  echo "bootstrap_base."
+  echo "Debootstrap concluído."
 }
+prepare_chroot() {
+  echo "Preparando chroot..."
+  mount --bind /dev "$CHROOT/dev"
+  mount --bind /dev/pts "$CHROOT/dev/pts"
+  mount -t proc proc "$CHROOT/proc"
+  mount -t sysfs sys "$CHROOT/sys"
+  cp /etc/resolv.conf "$CHROOT/etc/resolv.conf"
+  echo "Chroot preparado."
+}
+prepare_chroot() {
+  mount --bind /dev "$CHROOT/dev"
+  mount --bind /dev/pts "$CHROOT/dev/pts"
+  mount -t proc proc "$CHROOT/proc"
+  mount -t sysfs sys "$CHROOT/sys"
+  cp /etc/resolv.conf "$CHROOT/etc/resolv.conf"
+}
+enter_chroot() {
+  echo "Entrando no chroot..."
+  chroot "$CHROOT" /bin/bash
+  echo "Saindo do chroot..."
+}
+feat: adicionar função de entrada no chroot.
 
