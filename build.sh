@@ -64,5 +64,3 @@ enter_chroot() {
   chroot "$CHROOT" /bin/bash
   echo "Saindo do chroot..."
 }
-feat: adicionar função de entrada no chroot.
-
