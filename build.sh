@@ -1,6 +1,19 @@
 #!/bin/bash
 echo "Ubuntu 16.04 ISO Builder - em desenvolvimento"
 set -e
+cleanup() {
+    echo "Executando cleanup..."
+
+    umount -lf "$CHROOT/dev/pts" 2>/dev/null || true
+    umount -lf "$CHROOT/dev" 2>/dev/null || true
+    umount -lf "$CHROOT/proc" 2>/dev/null || true
+    umount -lf "$CHROOT/sys" 2>/dev/null || true
+
+    echo "Cleanup finalizado."
+}
+
+trap cleanup EXIT
+
 if [[ $EUID -ne 0 ]]; then
   echo "Execute como root."
   exit 1
@@ -43,7 +56,6 @@ echo "1) Utilitários básicos (vim, htop, curl)"
 echo "2) Desenvolvimento (build-essential, git)"
 echo "3) Rede (net-tools, openssh-server)"
 echo "4) Nenhum"
-read -p "Opção: " OPT
 
 
 bootstrap_base() {
