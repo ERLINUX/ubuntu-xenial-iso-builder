@@ -25,6 +25,8 @@ RELEASE="xenial"
 ARCH="amd64"
 WORKDIR="$PWD/workdir"
 CHROOT="$WORKDIR/chroot"
+LOGFILE="$WORKDIR/build.log"
+exec > >(tee -a "$LOGFILE") 2>&1
 mkdir -p "$CHROOT"
 DEPS=(debootstrap mksquashfs xorriso)
 
@@ -184,6 +186,21 @@ save_user_choices() {
 # -------------------------
 # Função: build_iso
 # -------------------------
+setup_casper() {
+    echo "Configurando casper..."
+
+    chroot "$CHROOT" /bin/bash -c "
+        apt install -y casper linux-image-generic
+    "
+
+    mkdir -p "$WORKDIR/iso/casper"
+
+    cp "$CHROOT"/boot/vmlinuz-* "$WORKDIR/iso/casper/vmlinuz"
+    cp "$CHROOT"/boot/initrd.img-* "$WORKDIR/iso/casper/initrd"
+
+    echo "Casper configurado."
+}
+
 build_iso() {
     echo "Gerando ISO bootável..."
 
@@ -199,6 +216,35 @@ build_iso() {
     echo "ISO base criada (SquashFS pronto)."
     echo "Próximo passo: adicionar bootloader (isolinux/GRUB)."
 }
+setup_isolinux() {
+    echo "Configurando isolinux..."
+
+    ISO_DIR="$WORKDIR/iso"
+
+    mkdir -p "$ISO_DIR/isolinux"
+
+    cp /usr/lib/ISOLINUX/isolinux.bin "$ISO_DIR/isolinux/"
+    cp /usr/lib/syslinux/modules/bios/ldlinux.c32 "$ISO_DIR/isolinux/"
+
+    cat > "$ISO_DIR/isolinux/isolinux.cfg" <<EOF
+UI menu.c32
+PROMPT 0
+TIMEOUT 50
+
+LABEL linux
+  MENU LABEL Ubuntu Xenial Custom
+  KERNEL /casper/vmlinuz
+  APPEND initrd=/casper/initrd boot=casper quiet ---
+EOF
+
+    xorriso -as mkisofs \
+      -o "$WORKDIR/ubuntu-xenial-custom.iso" \
+      -b isolinux/isolinux.bin \
+      -c isolinux/boot.cat \
+      -no-emul-boot -boot-load-size 4 -boot-info-table \
+      "$ISO_DIR"
+
+    echo "ISO final criada em: $WORKDIR/ubuntu-xenial-custom.iso"
 main() {
     bootstrap_base
     prepare_chroot
@@ -206,6 +252,8 @@ main() {
     install_desktop
     install_optional_packages
     save_user_choices
+    setup_casper
     build_iso
+    setup_isolinux
 }
-main
+
